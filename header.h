@@ -101,6 +101,7 @@ public:
 	//Tiles constructor
 	Tiles(Color color, Type type)
 	{
+		//Get the piece color and type
 		pieceColor = color;
 		pieceType = type;
 
@@ -140,6 +141,85 @@ public:
 		_blackPawn.setPosition(x + 5, y + 5);
 	}
 
+	//Function to get the sprite based on color/type
+	sf::Sprite getSprite(Tiles tile)
+	{
+		if (tile.pieceColor == Color::White)
+		{
+			if (tile.pieceType == Type::Queen)
+			{
+				return _whiteQueen;
+			}
+			else if (tile.pieceType == Type::King)
+			{
+				return _whiteKing;
+			}
+			else if (tile.pieceType == Type::Bishop)
+			{
+				return _whiteBishop;
+			}
+			else if (tile.pieceType == Type::Knight)
+			{
+				return _whiteKnight;
+			}
+			else if (tile.pieceType == Type::Rook)
+			{
+				return _whiteRook;
+			}
+			else if (tile.pieceType == Type::Pawn)
+			{
+				return _whitePawn;
+			}
+		}
+		else if (tile.pieceColor == Color::Black)
+		{
+			if (tile.pieceType == Type::Queen)
+			{
+				return _blackQueen;
+			}
+			else if (tile.pieceType == Type::King)
+			{
+				return _blackKing;
+			}
+			else if (tile.pieceType == Type::Bishop)
+			{
+				return _blackBishop;
+			}
+			else if (tile.pieceType == Type::Knight)
+			{
+				return _blackKnight;
+			}
+			else if (tile.pieceType == Type::Rook)
+			{
+				return _blackRook;
+			}
+			else if (tile.pieceType == Type::Pawn)
+			{
+				return _blackPawn;
+			}
+		}
+		else
+		{
+			//Return blank sprite
+			sf::Sprite none;
+			return none;
+		}
+
+	}
+
+	//Get the opposite of current piece color
+	Color getOppsiteColor()
+	{
+		if (pieceColor == Color::Black)
+		{
+			return Color::White;
+		}
+		else if (pieceColor == Color::White)
+		{
+			return Color::Black;
+		}
+	}
+
 };
 
 //Class for board
@@ -151,7 +231,6 @@ public:
 
 	//Create a vector of tiles to represent the board;
 	vector<vector<Tiles>> tileVector;
-
 
 	//Board constructor
 	Board()
@@ -188,9 +267,67 @@ public:
 		}
 	}
 
+	//Boolean for whether or not piece movement is valid
+	bool movePiece(int startX, int startY, int endX, int endY)
+	{
+		//X = col, Y = row
+
+		//Get the starting/ending tiles
+		Tiles start = tileVector[startX][startY];
+		Tiles end = tileVector[endX][endY];
+
+		//Check to see if piece is moving according to chess rules
+		if (start.pieceType == Type::Queen)
+		{
+			//Difference between starting x and y and ending x and y coordinates, aka the movement along the axis
+			int dx = endX - startX;
+			int dy = endY - startY;
+			
+			//If the movement is in a straight line
+			if ((abs(dx) > 0 && dy == 0) || (dx == 0 && abs(dy) > 0))
+			{
+				for (int x = startX; x < dx; x++)
+				{
+					//If there is no piece on the current tile
+					if (tileVector[x][startY].pieceType == Type::None)
+					{
+						continue;
+					}
+					//If there is a piece on the current tile
+					else
+					{
+						//Cannot jump over piece, so return false
+						return false;
+					}
+				}
+
+
+				////If there is a piece at the end which is the same color as the player's
+				//if (end.pieceType != Type::None && end.pieceColor == start.pieceColor)
+				//{
+				//	//Return false, piece not moved
+				//	return false;
+				//}
+				////Else if there is a piece at the end which is the other player's color
+				//else if (end.pieceType != Type::None && end.pieceColor != start.pieceColor)
+				//{
+				//	//Return true, move the piece
+				//	return true;
+				//}
+				////Else, there is no piece
+				//else
+				//{
+				//	//If there is no piece, there is no obstruction, return true
+				//	return true;
+				//}
+			}
+
+		}
+
+	}
+
 
 };
-
 
 
 
