@@ -1,2 +1,2 @@
 # Chess
-Personal Chess Project
+Chess program that I'm making for fun and learning purposes
