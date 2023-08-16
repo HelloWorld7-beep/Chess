@@ -12,28 +12,9 @@
 
 using namespace std;
 
-//Defining textures static member variable
-unordered_map<string, sf::Texture> TextureManager::textures;
-
-void game()
+void drawBoard(sf::RenderWindow& window, Tiles& tiles, Board& board)
 {
-    //Create window
-    sf::RenderWindow window(sf::VideoMode(1000, 1000), "Chess");
-
-    //Create board
-    Board board;
-    // Create tiles
-    Tiles tiles;
-
-    //Create event
-    sf::Event event;
-
-    //Boolean for which player is playing
-    bool player = false;
-
-    window.clear(sf::Color::White);
-
-    // Loop through each tile and draw the corresponding chess piece
+    //Loop through each tile and draw the corresponding chess piece
     for (int row = 0; row < 8; row++)
     {
         for (int col = 0; col < 8; col++)
@@ -102,10 +83,42 @@ void game()
             }
         }
     }
+}
+
+//Defining textures static member variable
+unordered_map<string, sf::Texture> TextureManager::textures;
+
+void game()
+{
+    //Create window
+    sf::RenderWindow window(sf::VideoMode(1000, 1000), "Chess");
+
+    //Create board
+    Board board;
+    //Create tiles
+    Tiles tiles;
+
+    //Create event
+    sf::Event event;
+
+    //Boolean for which player is playing
+    bool player = false;
+
+    window.clear(sf::Color::White);
+
+    drawBoard(window, tiles, board);
 
     window.display();
 
-    //Main game loop, while the window is open
+    //Integers to store selected row/col
+    int clickedRow = -1;
+    int clickedCol = -1;
+    //String to store piece type
+    string type = "";
+    //String to store piece color
+    string color = "";
+
+    //While the window is open
     while (window.isOpen())
     {
         while (window.pollEvent(event))
@@ -114,45 +127,114 @@ void game()
             {
                 window.close();
             }
-            //Else if player clicks piece
-            else if (event.type == sf::Event::MouseButtonPressed)
+
+            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
             {
-                //If left click piece
-                if (event.mouseButton.button == sf::Mouse::Left)
+                //Get the released position
+                int mouseX = event.mouseButton.x;
+                int mouseY = event.mouseButton.y;
+                //Translate it into rows/cols
+                int col = mouseX / 125;
+                int row = mouseY / 125;
+
+                cout << "row, col " << row << " " << col << endl;
+
+                //If there is a in the clicked area
+                if ((board.tileVector[row][col].pieceType != Type::None) && player == false)
                 {
-                    //Get the position of the mouse click
-                    int mouseX = event.mouseButton.x;
-                    int mouseY = event.mouseButton.y;
-
-                    //Change mouse coord to board coordinates, aka tile positions
-                    int col = mouseX / 125;
-                    int row = mouseY / 125;
-
-                    //Check if the current tile has white peice, and if it is the white player's turn
-                    if (board.tileVector[row][col].pieceColor == Color::White && player == false)
+                    if (board.tileVector[row][col].pieceColor == Color::White)
                     {
+                        clickedRow = row;
+                        clickedCol = col;
 
-                        // After a successful move, switch the turn to the other player
-                        player = true;
+                        type = typeToString(board.tileVector[row][col].pieceType);
+                        color = colorToString(board.tileVector[row][col].pieceColor);
+
+                        cout << "clickedrow, clickedCol " << clickedRow << " " << clickedCol << endl;
                     }
-                    //Else check if the current tile has black peice, and if it is the black player's turn
-                    else if (board.tileVector[row][col].pieceColor == Color::Black && player == true)
+                    
+                }
+                else if ((board.tileVector[row][col].pieceType != Type::None) && player == true)
+                {
+                    if (board.tileVector[row][col].pieceColor == Color::Black)
                     {
+                        clickedRow = row;
+                        clickedCol = col;
 
-                        // After a successful move, switch the turn to the other player
-                        player = false;
+                        type = typeToString(board.tileVector[row][col].pieceType);
+                        color = colorToString(board.tileVector[row][col].pieceColor);
                     }
                 }
+
+                cout << "type " << typeToString(board.tileVector[row][col].pieceType) << endl;
             }
+            else if (event.type == sf::Event::MouseButtonReleased)
+            {
+                //Get the released position
+                int mouseX = event.mouseButton.x;
+                int mouseY = event.mouseButton.y;
+                //Translate it into rows/cols
+                int endCol = mouseX / 125;
+                int endRow = mouseY / 125;
+
+                cout << "endrow, endcol " << endRow << " " << endCol << endl;
+
+                if (clickedRow != -1 && clickedCol != -1)
+                {
+                    cout << "clickedrow, clickedCol " << clickedRow << " " << clickedCol << endl;
+
+                    if (board.movePiece(clickedCol, clickedRow, endCol, endRow, type, color))
+                    {
+                        cout << "movedpiece is true " << endl;
+
+                        board.tileVector[endRow][endCol] = board.tileVector[clickedRow][clickedCol];
+                        board.tileVector[clickedRow][clickedCol] = Tiles(Color::None, Type::None);
+
+                        if (player == true)
+                        {
+                            player = false;
+                        }
+                        else
+                        {
+                            player = true;
+                        }
+
+                    }
+
+                    //Reset clicked row/col
+                    clickedRow = -1;
+                    clickedCol = -1;
+                    //Reset type
+                    type = "";
+                    //Reset color
+                    color = "";
+                }
                 
+
+                
+            }
+
+            window.clear(sf::Color::White);
+
+            drawBoard(window, tiles, board);
+
+            window.display();
+
+            //cout << "window" << endl;
+
         }
 
-        
     }
-}
+    
+};
+
 int main() {
 
     /*
+     * TODO
+     * Piece movement logic
+     * Piece capture logic
+     * Game end logic
      * Chess game needs:
      * 1) Main menu screen
      * 2) Start button
@@ -163,6 +245,6 @@ int main() {
 
     game();
 
-
     return 0;
+
 }
