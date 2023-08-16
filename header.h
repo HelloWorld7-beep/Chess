@@ -222,6 +222,31 @@ public:
 
 };
 
+//Method for debugging types
+string typeToString(Type pieceType) 
+{
+	switch (pieceType) 
+	{
+		case Type::Queen: return "Queen";
+		case Type::King: return "King";
+		case Type::Bishop: return "Bishop";
+		case Type::Knight: return "Knight";
+		case Type::Rook: return "Rook";
+		case Type::Pawn: return "Pawn";
+		default: return "None";
+	}
+}
+
+string colorToString(Color pieceColor)
+{
+	switch (pieceColor)
+	{
+		case Color::White: return "White";
+		case Color::Black: return "Black";
+		default: return "None";
+	}
+}
+
 //Class for board
 class Board
 {
@@ -268,63 +293,308 @@ public:
 	}
 
 	//Boolean for whether or not piece movement is valid
-	bool movePiece(int startX, int startY, int endX, int endY)
+	bool movePiece(int startX, int startY, int endX, int endY, string type, string color)
 	{
 		//X = col, Y = row
 
 		//Get the starting/ending tiles
-		Tiles start = tileVector[startX][startY];
-		Tiles end = tileVector[endX][endY];
+		//Tiles start = tileVector[startX][startY];
+		//Tiles end = tileVector[endX][endY];
+
+		cout << "startx: " << startX << "starty: " << startY << endl;
+
+		/*
+		for (int row = 0; row < 8; row++)
+		{
+			for (int col = 0; col < 8; col++)
+			{
+				cout << "  boardtype  " << typeToString(tileVector[row][col].pieceType);
+
+				if (startX == row && startY == col)
+				{
+					cout << endl;
+					cout << "row and col " << row << col;
+					cout << endl;
+					//cout << "type " << typeToString(start.pieceType) << endl;
+					cout << endl;
+				}
+
+			}
+			cout << endl;
+
+		}
+		*/
+
+		//cout << "type " << typeToString(start.pieceType) << endl;
 
 		//Check to see if piece is moving according to chess rules
-		if (start.pieceType == Type::Queen)
+		//Queen movement
+		if (type == "Queen")
 		{
 			//Difference between starting x and y and ending x and y coordinates, aka the movement along the axis
 			int dx = endX - startX;
 			int dy = endY - startY;
-			
-			//If the movement is in a straight line
-			if ((abs(dx) > 0 && dy == 0) || (dx == 0 && abs(dy) > 0))
+
+			//Check for valid movement along the axis
+			if ((dx == 0 && dy != 0) || (dx != 0 && dy == 0) || abs(dx) == abs(dy))
 			{
-				for (int x = startX; x < dx; x++)
+				//Direction to "step" in
+				int stepX = 0;
+				int stepY = 0;
+
+				if (dx > 0)
 				{
-					//If there is no piece on the current tile
-					if (tileVector[x][startY].pieceType == Type::None)
-					{
-						continue;
-					}
-					//If there is a piece on the current tile
-					else
-					{
-						//Cannot jump over piece, so return false
-						return false;
-					}
+					stepX = 1;
+				}
+				else if (dx < 0)
+				{
+					stepX = -1;
+				}
+				else
+				{
+					stepX = 0;
 				}
 
+				if (dy > 0)
+				{
+					stepY = 1;
+				}
+				else if (dy < 0)
+				{
+					stepY = -1;
+				}
+				else
+				{
+					stepY = 0;
+				}
 
-				////If there is a piece at the end which is the same color as the player's
-				//if (end.pieceType != Type::None && end.pieceColor == start.pieceColor)
-				//{
-				//	//Return false, piece not moved
-				//	return false;
-				//}
-				////Else if there is a piece at the end which is the other player's color
-				//else if (end.pieceType != Type::None && end.pieceColor != start.pieceColor)
-				//{
-				//	//Return true, move the piece
-				//	return true;
-				//}
-				////Else, there is no piece
-				//else
-				//{
-				//	//If there is no piece, there is no obstruction, return true
-				//	return true;
-				//}
+				int x = startX + stepX;
+				int y = startY + stepY;
+
+				//Check for obstruction and check end piece color
+				while (x != endX || y != endY)
+				{
+					if (tileVector[y][x].pieceType != Type::None)
+					{
+						return false;
+					}
+					x += stepX;
+					y += stepY;
+				}
+
+				return tileVector[endY][endX].pieceType == Type::None || tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor;
+			}
+
+			//Invalid movement for the Queen
+			return false; 
+		}
+		//King movement
+		if (type == "King")
+		{
+			int dx = abs(endX - startX);
+			int dy = abs(endY - startY);
+
+			//Check for valid movement (one square in any direction)
+			if ((dx == 1 && dy <= 1) || (dx <= 1 && dy == 1))
+			{
+				//Check if the destination square is empty or has an opposing piece
+				return tileVector[endY][endX].pieceType == Type::None || tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor;
 			}
 
 		}
+		//Bishop movement
+		if (type == "Bishop")
+		{
+			int dx = endX - startX;
+			int dy = endY - startY;
 
+			// Check for valid diagonal movement
+			if (abs(dx) == abs(dy))
+			{
+				//Direction to "step" in
+				int stepX = 0;
+				int stepY = 0;
+
+				if (dx > 0)
+				{
+					stepX = 1;
+				}
+				else if (dx < 0)
+				{
+					stepX = -1;
+				}
+				else
+				{
+					stepX = 0;
+				}
+
+				if (dy > 0)
+				{
+					stepY = 1;
+				}
+				else if (dy < 0)
+				{
+					stepY = -1;
+				}
+				else
+				{
+					stepY = 0;
+				}
+
+				int x = startX + stepX;
+				int y = startY + stepY;
+
+				// Check for obstruction and check end piece color
+				while (x != endX)
+				{
+					if (tileVector[y][x].pieceType != Type::None)
+					{
+						return false;
+					}
+					x += stepX;
+					y += stepY;
+				}
+
+				return tileVector[endY][endX].pieceType == Type::None || tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor;
+			}
+		}
+		//Knight movement
+		if (type == "Knight")
+		{
+			int dx = abs(endX - startX);
+			int dy = abs(endY - startY);
+
+			// Check for valid L-shaped movement (2 squares in one direction and 1 square in the other)
+			if ((dx == 1 && dy == 2) || (dx == 2 && dy == 1))
+			{
+				// Check if the destination square is empty or has an opposing piece
+				return tileVector[endY][endX].pieceType == Type::None || tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor;
+			}
+		}
+		//Rook movement
+		if (type == "Rook")
+		{
+			int dx = endX - startX;
+			int dy = endY - startY;
+
+			// Check for valid straight-line movement
+			if ((dx == 0 && dy != 0) || (dx != 0 && dy == 0))
+			{
+				//Direction to "step" in
+				int stepX = 0;
+				int stepY = 0;
+
+				if (dx > 0)
+				{
+					stepX = 1;
+				}
+				else if (dx < 0)
+				{
+					stepX = -1;
+				}
+				else
+				{
+					stepX = 0;
+				}
+
+				if (dy > 0)
+				{
+					stepY = 1;
+				}
+				else if (dy < 0)
+				{
+					stepY = -1;
+				}
+				else
+				{
+					stepY = 0;
+				}
+
+				int x = startX + stepX;
+				int y = startY + stepY;
+
+				// Check for obstruction and check end piece color
+				while (x != endX || y != endY)
+				{
+					if (tileVector[y][x].pieceType != Type::None)
+					{
+						return false;
+					}
+					x += stepX;
+					y += stepY;
+				}
+
+				return tileVector[endY][endX].pieceType == Type::None || tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor;
+			}
+		}
+		//Pawn movement
+		if (type == "Pawn")
+		{
+			//X = col, Y = row
+			cout << "pawn " << endl;
+			cout << "startx: " << startX << "starty: " << startY << endl;
+
+			int dx = endX - startX;
+			int dy = endY - startY;
+
+			cout << "dx: " << dx << "dy: " << dy << endl;
+
+			if (color == "White")
+			{
+				// Pawns can move one square forward
+				if (dx == 0 && dy == 1 && tileVector[endY][endX].pieceType == Type::None)
+				{
+					return true;
+				}
+
+				// Pawns can move two squares forward from their starting position
+				if (dx == 0 && dy == 2 && startY == 1 && tileVector[endY][endX].pieceType == Type::None)
+				{
+					return true;
+				}
+
+				// Pawns can capture diagonally
+				if (abs(dx) == 1 && dy == 1 &&
+					tileVector[endY][endX].pieceType != Type::None &&
+					tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor)
+				{
+					return true;
+				}
+			}
+			else
+			{
+				// Pawns can move one square forward
+				if (dx == 0 && dy == -1 && tileVector[endY][endX].pieceType == Type::None)
+				{
+					return true;
+				}
+
+				// Pawns can move two squares forward from their starting position
+				if (dx == 0 && dy == -2 && startY == 6 && tileVector[endY][endX].pieceType == Type::None)
+				{
+					return true;
+				}
+
+				// Pawns can capture diagonally
+				if (abs(dx) == 1 && dy == -1 &&
+					tileVector[endY][endX].pieceType != Type::None &&
+					tileVector[endY][endX].pieceColor != tileVector[startY][startX].pieceColor)
+				{
+					return true;
+				}
+			}
+
+			//En passant capture?
+
+			return false;
+			
+		}
+
+		//Return false if logic is not correct for any piece
+		return false;
 	}
+
+	
 
 
 };
